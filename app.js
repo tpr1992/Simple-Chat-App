@@ -36,6 +36,7 @@ var questions = [
   const showResponse = () => {
     let input = inputBox.value
     inputBox.value = ""
+    console.log(num);
     if (input !== '') {
       if (num === 0) {
         output.innerText = `Hello ${input}, nice meeting you!`
@@ -62,6 +63,7 @@ var questions = [
   }
   inputBox.addEventListener('keypress', (event) => {
     if (event.charCode === 13) {
+      console.log('Thanks', event.target.value);
       showResponse();
     }
   })
@@ -82,28 +84,30 @@ let greetings = [
   'Please go away!'
 ]
 let weather = [
-  'The weather is hot and muggy',
-  'It\'s raining cats and dogs',
-  'It\'s beautiful out today '
+  'What is your city?'
 ]
 let jokes = [
   'Police arrested two kids yesterday, one was drinking battery acid, the other was eating fireworks. They charged one - and let the other one off.',
   'I\'m on a whisky diet. I\'ve lost three days already.'
 ]
 let secret = [
-  'meow meow meow meow meow meow meow meow meow meow meow meow',
-  'meow meow meow meow meow meow meow meow meow meow meow meow'
+
 ]
 let personal = [
+
   'A cat.',
+  'A 4 legged animal',
   'A black and white one year old kitten. Also known as a tuxedo cat.',
 ]
+let checkWeatherBinary = 0
+let weatherArr = []
+let city = ''
+let temp = ''
 
 
 recognition.onstart = function() {
   console.log('voice is activated, you can to microphone');
 }
-
 
 recognition.onresult = function(event) {
   console.log(event)
@@ -112,6 +116,7 @@ recognition.onresult = function(event) {
   content.textContent = transcript
   output.textContent = transcript
   readOutLoud(transcript)
+  console.log(transcript);
 }
 
 btn.addEventListener('click', () => {
@@ -120,29 +125,55 @@ btn.addEventListener('click', () => {
 
 const readOutLoud = (message) => {
   const speech = new SpeechSynthesisUtterance();
-  speech.text = 'I don\'t know what you are saying'
+  speech.text = 'I don\'t know what you are saying to me'
 
     if (message.includes('how are you') || message.includes('hello') || message.includes('hi')) {
       let finalText = greetings[Math.floor(Math.random() * greetings.length)];
-
-    } else if (message.includes('weather')) {
-      let finalText = weather[Math.floor(Math.random() * weather.length)]
-
-    } else if (message.includes('joke')) {
+      speech.text = finalText
+    }
+    else if (message.includes('joke')) {
       let finalText = jokes[Math.floor(Math.random() * jokes.length)]
-
-    } else if (message.includes('secret')) {
-      let finalText = secret[Math.floor(Math.random() * secret.length)]
-
+      speech.text = finalText
     } else if (message.includes('ludvig') || message.includes('cat')) {
       let finalText = personal[Math.floor(Math.random() * personal.length)]
-
+      speech.text = finalText
     }
+
+    else if (message.includes('weather')) {
+      let finalText = weather[Math.floor(Math.random() * weather.length)]
+      speech.text = finalText
+      checkWeatherBinary = 1
+      console.log(checkWeatherBinary);
+    }
+
+    else if (message.includes('Brooklyn') && checkWeatherBinary !== 0) {
+      checkWeather('Brooklyn')
+      speech.text = weatherArr[0]
+    };
+
   speech.volume = 1;
   speech.pitch = .05;
   speech.rate = 1;
-  inputBox.value = speech.text
-  // speech.text = message
-
   window.speechSynthesis.speak(speech);
 }
+
+function checkWeather(cityName) {
+  let key = 'KEY';
+  fetch('https://api.openweathermap.org/data/2.5/weather?q=' + `${cityName},us`+ '&appid=' + key)
+  .then(res => res.json())
+  .then(res => {
+    let k = Math.round((res.main.temp) * 100 / 100)
+    let f = 9/5 * (k - 273) + 32
+    let description = res.weather[0].description
+    temp = f.toString()
+    weatherArr.push(`The weather is currently ${temp} degrees with ${description} and a humidity of ${res.main.humidity} percent`)
+    // debugger
+    console.log(weatherArr);
+  })
+}
+
+let weatherBtn = document.querySelector('#check-weather')
+weatherBtn.addEventListener('click', () => {
+  console.log('checking weather...');
+  checkWeather('Brooklyn');
+})
